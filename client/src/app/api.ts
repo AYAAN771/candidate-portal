@@ -10,7 +10,7 @@ export interface Skill {
   id: number;
   name: string;
 }
-
+//
 export interface Candidate {
   id: number;
   name: string;
