@@ -1,7 +1,7 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 
-export const API = 'http://localhost:3000/api';
+export const API = 'http://candidate-portal-production-e6ab4750.up.railway.app/api';
 
 export const STATUSES = ['applied', 'interviewing', 'offered', 'hired', 'rejected'] as const;
 export type Status = (typeof STATUSES)[number];
