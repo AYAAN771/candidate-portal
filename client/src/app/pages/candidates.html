@@ -1,0 +1,400 @@
+<div appear>
+  <div class="flex items-center justify-between gap-4">
+    <h1 class="text-xl font-semibold">Candidates</h1>
+    <div class="flex items-center gap-3">
+      @if (isAdmin()) {
+        <a
+          routerLink="/candidates/deleted"
+          class="rounded-md border border-gray-300 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Recently deleted
+          @if (deleted.hasValue()) {
+            <span class="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">{{
+              deletedCount()
+            }}</span>
+          } @else {
+            <span
+              class="ml-1 inline-block h-4 w-6 animate-pulse rounded-full bg-gray-200 align-middle"
+            ></span>
+          }
+        </a>
+      }
+      @if (user()) {
+        <a
+          routerLink="/candidates/new"
+          class="rounded-md bg-blue-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          Add candidate
+        </a>
+      }
+    </div>
+  </div>
+
+  <div class="mt-4 border-b border-gray-200">
+    <nav class="-mb-px flex gap-6 overflow-x-auto text-sm">
+      <button
+        (click)="status.set(null)"
+        class="border-b-2 pb-3 whitespace-nowrap"
+        [class]="
+          status() === null
+            ? 'border-blue-600 font-medium text-blue-600'
+            : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900'
+        "
+      >
+        All
+        @if (stats.hasValue()) {
+          <span class="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">{{
+            total()
+          }}</span>
+        } @else {
+          <span
+            class="ml-1 inline-block h-4 w-6 animate-pulse rounded-full bg-gray-200 align-middle"
+          ></span>
+        }
+      </button>
+      @for (s of statuses; track s) {
+        <button
+          (click)="status.set(s)"
+          class="border-b-2 pb-3 whitespace-nowrap capitalize"
+          [class]="
+            status() === s
+              ? 'border-blue-600 font-medium text-blue-600'
+              : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900'
+          "
+        >
+          {{ s }}
+          @if (stats.hasValue()) {
+            <span class="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">{{
+              counts()[s] ?? 0
+            }}</span>
+          } @else {
+            <span
+              class="ml-1 inline-block h-4 w-6 animate-pulse rounded-full bg-gray-200 align-middle"
+            ></span>
+          }
+        </button>
+      }
+    </nav>
+  </div>
+
+  <form [formGroup]="filters" class="mt-4 flex flex-wrap items-center gap-3">
+    <div class="relative w-full sm:w-72">
+      <app-icon
+        name="search"
+        class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400"
+      />
+      <input
+        formControlName="search"
+        type="search"
+        placeholder="Search by name or email"
+        class="block w-full rounded-md border border-gray-300 bg-white py-2 pr-3 pl-9 text-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+      />
+    </div>
+    <select
+      formControlName="skillId"
+      class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+    >
+      <option [ngValue]="null">Any skill</option>
+      @if (skills.hasValue()) {
+        @for (s of skills.value(); track s.id) {
+          <option [ngValue]="s.id">{{ s.name }}</option>
+        }
+      }
+    </select>
+    @if (filtered()) {
+      <button
+        type="button"
+        (click)="clearFilters()"
+        class="text-sm text-gray-600 hover:text-gray-900"
+      >
+        Clear filters
+      </button>
+    }
+  </form>
+
+  <div class="mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white">
+    @if (list.error()) {
+      <div class="px-4 py-12 text-center text-sm">
+        <p class="font-medium">Couldn't load candidates.</p>
+        <p class="mt-1 text-gray-500">Check that the API is running on port 3000.</p>
+        <button (click)="list.reload()" class="mt-3 font-medium text-blue-600 hover:text-blue-800">
+          Try again
+        </button>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-50 text-left text-xs font-medium text-gray-500">
+            <tr>
+              <th class="px-4 py-2.5 font-medium">
+                <button
+                  (click)="sortBy('name')"
+                  class="inline-flex items-center gap-1 hover:text-gray-900"
+                >
+                  Name
+                  @if (sort().by === 'name') {
+                    @if (sort().order === 'ASC') {
+                      <app-icon name="arrow-up" class="size-3.5" />
+                    } @else {
+                      <app-icon name="arrow-down" class="size-3.5" />
+                    }
+                  } @else {
+                    <app-icon name="sort" class="size-3.5 text-gray-300" />
+                  }
+                </button>
+              </th>
+              <th class="px-4 py-2.5 font-medium">Contact</th>
+              <th class="px-4 py-2.5 font-medium">Stage</th>
+              <th class="px-4 py-2.5 font-medium">
+                <button
+                  (click)="sortBy('experience')"
+                  class="inline-flex items-center gap-1 hover:text-gray-900"
+                >
+                  Experience
+                  @if (sort().by === 'experience') {
+                    @if (sort().order === 'ASC') {
+                      <app-icon name="arrow-up" class="size-3.5" />
+                    } @else {
+                      <app-icon name="arrow-down" class="size-3.5" />
+                    }
+                  } @else {
+                    <app-icon name="sort" class="size-3.5 text-gray-300" />
+                  }
+                </button>
+              </th>
+              <th class="px-4 py-2.5 text-right font-medium whitespace-nowrap">Expected (LPA)</th>
+              <th class="px-4 py-2.5 text-right font-medium whitespace-nowrap">Assigned (LPA)</th>
+              <th class="px-4 py-2.5 font-medium">Skills</th>
+              <th class="px-4 py-2.5 font-medium">
+                <button
+                  (click)="sortBy('createdAt')"
+                  class="inline-flex items-center gap-1 hover:text-gray-900"
+                >
+                  Added
+                  @if (sort().by === 'createdAt') {
+                    @if (sort().order === 'ASC') {
+                      <app-icon name="arrow-up" class="size-3.5" />
+                    } @else {
+                      <app-icon name="arrow-down" class="size-3.5" />
+                    }
+                  } @else {
+                    <app-icon name="sort" class="size-3.5 text-gray-300" />
+                  }
+                </button>
+              </th>
+              @if (user()) {
+                <th class="px-4 py-2.5"><span class="sr-only">Actions</span></th>
+              }
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-gray-100" [class.opacity-60]="list.isLoading()">
+            @if (data(); as result) {
+              @for (c of result.data; track c.id) {
+                <tr class="hover:bg-gray-50">
+                  <td class="px-4 py-3">
+                    <div class="flex items-center gap-3">
+                      <span
+                        class="grid size-8 shrink-0 place-items-center rounded-full bg-gray-100 text-xs font-medium text-gray-600"
+                      >
+                        {{ initials(c.name) }}
+                      </span>
+                      <div>
+                        <div class="font-medium text-gray-900">{{ c.name }}</div>
+                        <div class="text-gray-500">{{ c.email }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-gray-700 tabular-nums">
+                    {{ formatPhone(c.phone) }}
+                  </td>
+                  <td class="px-4 py-3">
+                    <span
+                      class="inline-block rounded px-2 py-0.5 text-xs font-medium capitalize"
+                      [class]="tones[c.status]"
+                    >
+                      {{ c.status }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-gray-700">
+                    {{ c.experience }} {{ c.experience === 1 ? 'year' : 'years' }}
+                  </td>
+                  <td class="px-4 py-3 text-right text-gray-700 tabular-nums">
+                    {{ c.expectedSalary ?? '—' }}
+                  </td>
+                  <td class="px-4 py-3 text-right text-gray-700 tabular-nums">
+                    {{ c.assignedSalary ?? '—' }}
+                  </td>
+                  <td class="px-4 py-3 text-gray-700">{{ skillNames(c) || '—' }}</td>
+                  <td class="px-4 py-3 whitespace-nowrap text-gray-500">
+                    {{ c.createdAt | date: 'd MMM y' }}
+                  </td>
+                  @if (user(); as u) {
+                    <td class="px-4 py-3 text-right whitespace-nowrap">
+                      <a
+                        [routerLink]="['/candidates', c.id, 'edit']"
+                        class="font-medium text-blue-600 hover:text-blue-800"
+                      >
+                        Edit
+                      </a>
+                      @if (u.role === 'admin') {
+                        <button
+                          (click)="deleting.set(c)"
+                          class="ml-4 font-medium text-red-600 hover:text-red-800"
+                        >
+                          Delete
+                        </button>
+                      }
+                    </td>
+                  }
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="9" class="px-4 py-12 text-center text-gray-500">
+                    No candidates match these filters.
+                    <button
+                      (click)="clearFilters()"
+                      class="ml-1 font-medium text-blue-600 hover:text-blue-800"
+                    >
+                      Clear filters
+                    </button>
+                  </td>
+                </tr>
+              }
+            } @else {
+              @for (i of placeholders; track i) {
+                <tr>
+                  <td class="px-4 py-3">
+                    <div class="flex items-center gap-3">
+                      <div class="size-8 shrink-0 animate-pulse rounded-full bg-gray-200"></div>
+                      <div class="space-y-2">
+                        <div
+                          class="h-3.5 animate-pulse rounded bg-gray-200"
+                          [style.width.px]="100 + (i % 3) * 24"
+                        ></div>
+                        <div
+                          class="h-3 animate-pulse rounded bg-gray-100"
+                          [style.width.px]="150 + (i % 2) * 20"
+                        ></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="h-3.5 w-24 animate-pulse rounded bg-gray-100"></div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="h-5 w-20 animate-pulse rounded bg-gray-100"></div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="h-3.5 w-14 animate-pulse rounded bg-gray-100"></div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="ml-auto h-3.5 w-8 animate-pulse rounded bg-gray-100"></div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="ml-auto h-3.5 w-8 animate-pulse rounded bg-gray-100"></div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div
+                      class="h-3.5 animate-pulse rounded bg-gray-100"
+                      [style.width.px]="90 + (i % 4) * 18"
+                    ></div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="h-3.5 w-20 animate-pulse rounded bg-gray-100"></div>
+                  </td>
+                  @if (user()) {
+                    <td class="px-4 py-3">
+                      <div class="ml-auto h-3.5 w-20 animate-pulse rounded bg-gray-100"></div>
+                    </td>
+                  }
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (data()?.meta; as meta) {
+        @if (meta.totalItems) {
+          <div
+            class="flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 px-4 py-3 text-sm text-gray-600"
+          >
+            <p>
+              Showing
+              <span class="font-medium text-gray-900">{{ (meta.currentPage - 1) * 10 + 1 }}</span>
+              to
+              <span class="font-medium text-gray-900">
+                {{ (meta.currentPage - 1) * 10 + data()!.data.length }}
+              </span>
+              of <span class="font-medium text-gray-900">{{ meta.totalItems }}</span>
+            </p>
+            <div class="flex items-center gap-1">
+              <button
+                (click)="page.set(page() - 1)"
+                [disabled]="page() <= 1"
+                class="rounded-md border border-gray-300 bg-white px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
+              >
+                Previous
+              </button>
+              @for (p of pages(); track p) {
+                <button
+                  (click)="page.set(p)"
+                  class="min-w-8 rounded-md px-2 py-1.5"
+                  [class]="
+                    p === page()
+                      ? 'bg-blue-50 font-medium text-blue-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  "
+                >
+                  {{ p }}
+                </button>
+              }
+              <button
+                (click)="page.set(page() + 1)"
+                [disabled]="page() >= meta.totalPages"
+                class="rounded-md border border-gray-300 bg-white px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        }
+      }
+    }
+  </div>
+</div>
+
+@if (deleting(); as c) {
+  <div
+    (click)="deleting.set(null)"
+    (animate.leave)="fadeOut($event)"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4"
+  >
+    <div
+      appear
+      role="dialog"
+      (click)="$event.stopPropagation()"
+      class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
+    >
+      <h2 class="font-semibold">Delete {{ c.name }}?</h2>
+      <p class="mt-2 text-sm text-gray-600">
+        They'll move to Recently deleted, where an admin can restore them.
+      </p>
+      <div class="mt-6 flex justify-end gap-3">
+        <button
+          (click)="deleting.set(null)"
+          class="rounded-md border border-gray-300 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="remove(c)"
+          class="rounded-md bg-red-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-red-700"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+}

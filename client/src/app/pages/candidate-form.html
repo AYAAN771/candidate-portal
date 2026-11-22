@@ -1,0 +1,193 @@
+<div appear class="max-w-3xl">
+  <nav class="text-sm text-gray-500">
+    <a routerLink="/candidates" class="hover:text-gray-700">Candidates</a>
+    <span class="mx-1.5">/</span>
+    <span class="text-gray-900">{{ id() ? 'Edit' : 'New' }}</span>
+  </nav>
+  <h1 class="mt-2 text-xl font-semibold">{{ id() ? 'Edit candidate' : 'New candidate' }}</h1>
+
+  @if (loading()) {
+    <div class="mt-6 space-y-5 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+      <div class="grid gap-5 sm:grid-cols-2">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div class="space-y-2">
+            <div class="h-3.5 w-24 animate-pulse rounded bg-gray-200"></div>
+            <div class="h-9 animate-pulse rounded-md bg-gray-100"></div>
+          </div>
+        }
+      </div>
+      <div class="grid gap-5 sm:grid-cols-3">
+        @for (i of [1, 2, 3]; track i) {
+          <div class="space-y-2">
+            <div class="h-3.5 w-24 animate-pulse rounded bg-gray-200"></div>
+            <div class="h-9 animate-pulse rounded-md bg-gray-100"></div>
+          </div>
+        }
+      </div>
+      <div class="grid grid-cols-2 gap-3 pt-2 sm:grid-cols-4">
+        @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+          <div class="h-4 w-20 animate-pulse rounded bg-gray-100"></div>
+        }
+      </div>
+    </div>
+  } @else {
+    <form
+      [formGroup]="form"
+      (ngSubmit)="save()"
+      class="mt-6 rounded-lg border border-gray-200 bg-white shadow-sm"
+    >
+      <div class="space-y-5 p-6">
+        <div class="grid gap-5 sm:grid-cols-2">
+          <label class="block text-sm">
+            <span class="font-medium text-gray-700">Full name</span>
+            <input
+              formControlName="name"
+              class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none [&.ng-invalid.ng-touched]:border-red-500"
+            />
+            @if (invalid('name')) {
+              <span class="mt-1 block text-xs text-red-600">Name is required.</span>
+            }
+          </label>
+          <label class="block text-sm">
+            <span class="font-medium text-gray-700">Email</span>
+            <input
+              type="email"
+              formControlName="email"
+              class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none [&.ng-invalid.ng-touched]:border-red-500"
+            />
+            @if (invalid('email')) {
+              <span class="mt-1 block text-xs text-red-600">Enter a valid email address.</span>
+            }
+          </label>
+        </div>
+
+        <div class="grid gap-5 sm:grid-cols-2">
+          <label class="block text-sm">
+            <span class="font-medium text-gray-700">Contact number</span>
+            <input
+              numeric="phone"
+              formControlName="phone"
+              placeholder="10-digit mobile number"
+              class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 tabular-nums placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none [&.ng-invalid.ng-touched]:border-red-500"
+            />
+            @if (invalid('phone')) {
+              <span class="mt-1 block text-xs text-red-600">
+                Enter a 10-digit mobile number starting with 6, 7, 8 or 9.
+              </span>
+            }
+          </label>
+          <label class="block text-sm">
+            <span class="font-medium text-gray-700">Stage</span>
+            <select
+              formControlName="status"
+              class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            >
+              @for (s of statuses; track s) {
+                <option [value]="s">{{ s | titlecase }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        <div class="grid gap-5 sm:grid-cols-3">
+          <label class="block text-sm">
+            <span class="font-medium text-gray-700">Years of experience</span>
+            <input
+              numeric="years"
+              formControlName="experience"
+              class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 tabular-nums focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none [&.ng-invalid.ng-touched]:border-red-500"
+            />
+            @if (invalid('experience')) {
+              <span class="mt-1 block text-xs text-red-600">Enter a number from 0 to 60.</span>
+            }
+          </label>
+          <label class="block text-sm">
+            <span class="font-medium text-gray-700">Expected salary (LPA)</span>
+            <div class="relative mt-1">
+              <input
+                numeric="salary"
+                formControlName="expectedSalary"
+                placeholder="e.g. 12.5"
+                class="block w-full rounded-md border border-gray-300 py-2 pr-12 pl-3 tabular-nums placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none [&.ng-invalid.ng-touched]:border-red-500"
+              />
+              <span
+                class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400"
+              >
+                LPA
+              </span>
+            </div>
+            @if (invalid('expectedSalary')) {
+              <span class="mt-1 block text-xs text-red-600">Up to 2 decimals, e.g. 12.5</span>
+            }
+          </label>
+          <label class="block text-sm">
+            <span class="font-medium text-gray-700">Assigned salary (LPA)</span>
+            <div class="relative mt-1">
+              <input
+                numeric="salary"
+                formControlName="assignedSalary"
+                placeholder="Once offered"
+                class="block w-full rounded-md border border-gray-300 py-2 pr-12 pl-3 tabular-nums placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none [&.ng-invalid.ng-touched]:border-red-500"
+              />
+              <span
+                class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400"
+              >
+                LPA
+              </span>
+            </div>
+            @if (invalid('assignedSalary')) {
+              <span class="mt-1 block text-xs text-red-600">Up to 2 decimals, e.g. 14</span>
+            }
+          </label>
+        </div>
+
+        <fieldset>
+          <legend class="text-sm font-medium text-gray-700">Skills</legend>
+          <div class="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
+            @if (skills.hasValue()) {
+              @for (s of skills.value(); track s.id) {
+                <label class="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    [checked]="has(s.id)"
+                    (change)="toggle(s.id)"
+                    class="size-4 rounded border-gray-300 accent-blue-600"
+                  />
+                  {{ s.name }}
+                </label>
+              }
+            } @else {
+              @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+                <div class="flex items-center gap-2">
+                  <div class="size-4 animate-pulse rounded bg-gray-200"></div>
+                  <div class="h-3.5 w-16 animate-pulse rounded bg-gray-100"></div>
+                </div>
+              }
+            }
+          </div>
+        </fieldset>
+
+        @if (error()) {
+          <p class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{{ error() }}</p>
+        }
+      </div>
+
+      <div
+        class="flex justify-end gap-3 rounded-b-lg border-t border-gray-200 bg-gray-50 px-6 py-3"
+      >
+        <a
+          routerLink="/candidates"
+          class="rounded-md border border-gray-300 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Cancel
+        </a>
+        <button
+          [disabled]="saving() || loading()"
+          class="rounded-md bg-blue-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+        >
+          {{ saving() ? 'Saving…' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  }
+</div>
